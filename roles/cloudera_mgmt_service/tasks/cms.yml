@@ -1,0 +1,34 @@
+---
+# This role will install cloudera manager package
+
+- name: Install cloudera manager package
+  yum: name={{ item }} state=latest
+  with_items:
+    - java-1.8.0-openjdk
+    - cloudera-manager-daemons
+#    - cloudera-manager-server
+    - cloudera-manager-agent
+    - mysql-connector-java
+  async: 7200
+  poll: 10
+#  notify: restart CM
+
+- name: Make sure no other jdk package
+  yum: name={{ item }} state=absent
+  with_items:
+   - jdk
+
+- name: chown cloudera_nfs 
+  file: name={{ item.mountpoint }} state=directory owner=cloudera-scm group=cloudera-scm mode=775
+  with_items: "{{ nfs_list }}"
+
+- name: Create /etc/cloudera-scm-agent/config.ini
+  template: src=etc/cloudera-scm-agent/config.ini.j2 dest=/etc/cloudera-scm-agent/config.ini owner=cloudera-scm group=cloudera-scm mode=0644
+
+- name: Disable Cloudera Manager agent except node1
+  service: name=cloudera-scm-agent state=stopped enabled=no
+  when: inventory_hostname != groups['mgmtcluster'][0]
+
+- name: Start Cloudera Manager agent on node1
+  service: name=cloudera-scm-agent state=started enabled=true
+  when: inventory_hostname == groups['mgmtcluster'][0]

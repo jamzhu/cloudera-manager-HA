@@ -1,0 +1,44 @@
+global_defs {
+   notification_email {
+     {{ notification_email }}
+   }
+   notification_email_from {{ notification_email_from }}
+   smtp_server {{ notification_smtp_server }}
+   smtp_connect_timeout 30
+   router_id {{ ansible_hostname }}
+}
+
+vrrp_script check_haproxy {
+    script "/etc/keepalived/check_haproxy.sh"
+    interval 5
+    weight 2
+}
+
+vrrp_instance VI_1 {
+    state {{ vrrp_instance_state }}
+    interface {{ mgmt_interface }}
+    virtual_router_id {{ vrrp_virtual_router_id }}
+    priority {{ vrrp_instance_priority }}
+{% if enable_keepalived_email_alert  %}
+    smtp_alert
+{% endif %}
+    advert_int {{ vrrp_advert_int }}
+    authentication {
+        auth_type PASS
+        auth_pass {{ vrrp_auth_password }}
+    }
+    track_script {
+        check_haproxy
+    }
+    virtual_ipaddress {
+{% if keepalived_vip_mysql is defined %}
+        {{ keepalived_vip_mysql }} dev {{ mgmt_interface }}
+{% endif %}
+{% if keepalived_vip_cms is defined %}
+        {{ keepalived_vip_cms }} dev {{ mgmt_interface }}
+{% endif %}
+{% if keepalived_vip_mgmt is defined %}
+        {{ keepalived_vip_mgmt }} dev {{ mgmt_interface }}
+{% endif %}
+    }
+}

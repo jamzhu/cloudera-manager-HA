@@ -1,0 +1,71 @@
+---
+mysqldb:
+  scmdb:
+    dbname:	"scm{{ pool_name }}"
+    dbuser:	"scm"
+    dbpassword:	"{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  amondb:
+    dbname:     "amon{{ pool_name }}"
+    dbuser:     "amon"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  rmandb:
+    dbname:     "rman{{ pool_name }}"
+    dbuser:     "rman"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  hivedb:
+    dbname:     "hive{{ pool_name }}"
+    dbuser:     "hive"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  sentrydb:
+    dbname:     "sentry{{ pool_name }}"
+    dbuser:     "sentry"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  navdb:
+    dbname:     "nav{{ pool_name }}"
+    dbuser:     "audit"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  navmsdb:
+    dbname:     "navms{{ pool_name }}"
+    dbuser:     "metadata"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  hmondb:
+    dbname:     "hmon{{ pool_name }}"
+    dbuser:     "hmon"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  smondb:
+    dbname:     "smon{{ pool_name }}"
+    dbuser:     "smon"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  ooziedb:
+    dbname:     "oozie{{ pool_name }}"
+    dbuser:     "oozie"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  huedb:
+    dbname:     "hue{{ pool_name }}"
+    dbuser:     "hue"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+  sqoopdb:
+    dbname:     "sqoop{{ pool_name }}"
+    dbuser:     "sqoop"
+    dbpassword: "{{ db_app_password | default(typassword) }}"
+    host:       "%.%.%.%"
+
+nfs_list:
+  - { mountpoint: "/var/lib/cloudera-host-monitor", nfsdir: "cloudera-host-monitor" }
+  - { mountpoint: "/var/lib/cloudera-scm-agent", nfsdir: "cloudera-scm-agent" }
+  - { mountpoint: "/var/lib/cloudera-scm-eventserver", nfsdir: "cloudera-scm-eventserver" }
+  - { mountpoint: "/var/lib/cloudera-scm-headlamp", nfsdir: "cloudera-scm-headlamp" }
+  - { mountpoint: "/var/lib/cloudera-scm-navigator", nfsdir: "cloudera-scm-navigator" }
+  - { mountpoint: "/var/lib/cloudera-service-monitor", nfsdir: "cloudera-service-monitor" }
+#  - { mountpoint: "/etc/cloudera-scm-agent", nfsdir: "etc-cloudera-scm-agent" }

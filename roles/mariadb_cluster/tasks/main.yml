@@ -1,0 +1,23 @@
+---
+- name: Get mariadb clusters status
+  shell: mysql -e "show global status like 'wsrep_cluster_status'" |grep wsrep_cluster_status |awk '{print $2}'
+  register: get_mysql_status
+  ignore_errors: true
+
+- name: Get mariadb clusters size
+  shell: mysql -e "show global status like 'wsrep_cluster_size'" |grep wsrep_cluster_size |awk '{print $2}'
+  register: get_mysql_size
+  ignore_errors: true
+
+# Default is 0, means this node is OK
+- set_fact:
+    mysql_cluster_status: "0"
+
+# If cluster size is not "3" or node status is not "Primary", need to fix
+# If mysql cmd error, need to fix
+- set_fact:
+    mysql_cluster_status: "1"
+  when: get_mysql_status.rc or get_mysql_status.stdout != "Primary" or get_mysql_size.rc or get_mysql_size.stdout != "2"
+
+- include: galera_bootstrap.yml
+  when: mysql_cluster_status == "1"

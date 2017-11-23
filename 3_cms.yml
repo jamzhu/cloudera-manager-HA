@@ -1,0 +1,13 @@
+---
+############################
+# Install cloudera manager server
+############################
+- hosts: basecluster
+  roles:
+  - cloudera_db_prepare
+
+- hosts: cmscluster
+  roles:
+  - cloudera_manager
+#  serial: 1
+

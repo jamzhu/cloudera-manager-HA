@@ -1,0 +1,21 @@
+---
+###################################################
+# Note: this playbook should ONLY run once
+# TODO: Tunning Mysql cluster 
+# TODO: Restart cluster is not the same action 
+#       with start cluster, if we can support both
+#       in role, it will be better
+###################################################
+#- include: release_info.yml
+
+############################
+# Install Mysql Cluster
+############################
+- hosts: basecluster
+  roles:
+  - mariadb
+
+- hosts: basecluster
+  roles:
+  - mariadb_cluster
+

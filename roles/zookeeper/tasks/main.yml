@@ -1,0 +1,22 @@
+---
+# This role will install and config zookeeper
+
+- name: Install zookeeper
+  yum: name={{ item }} state=latest
+  with_items:
+    - zookeeper
+    - zookeeper-server
+  notify: restart zookeeper
+
+- name: init zookeeper
+  shell: service zookeeper-server init --myid={{ zookeeper_id }}
+
+#- name: write myid file
+#  copy: content="{{ groups['zookeeper'].index(inventory_hostname)+1 }}" dest={{ zookeeper_datadir }}/myid owner=zookeeper group=zookeeper mode=644
+
+- name: Configure zoo.cfg
+  template: src=etc/zookeeper/conf/zoo.cfg.j2 dest=/etc/zookeeper/conf/zoo.cfg group=root owner=root mode=0644
+  notify: restart zookeeper
+
+- name: start zookeeper-server
+  service: name=zookeeper-server state=started enabled=yes

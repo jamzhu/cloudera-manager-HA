@@ -1,0 +1,4 @@
+---
+- hosts: cdh-client
+  roles:
+  - cloudera_scm_agent

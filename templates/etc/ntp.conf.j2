@@ -1,0 +1,7 @@
+server {{ ntp_server }}
+restrict 127.0.0.1 
+restrict -6 ::1
+restrict {{ ntp_server }} mask 255.255.255.255 nomodify notrap noquery
+driftfile /var/lib/ntp/drift
+includefile /etc/ntp/crypto/pw
+keys /etc/ntp/keys

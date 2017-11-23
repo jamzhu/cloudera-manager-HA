@@ -1,0 +1,6 @@
+---
+- include: nfs.yml
+  when: cms_ha == True and inventory_hostname in groups['mgmtcluster']
+
+- include: cms.yml
+  when: inventory_hostname in groups['mgmtcluster']

@@ -1,0 +1,6 @@
+---
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: restart CM
+  service: name=cloudera-scm-server state=restarted

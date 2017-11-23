@@ -1,0 +1,134 @@
+---
+# Remove old ocp repo
+#- name: Remove old repo
+#  shell: rm -rf /etc/yum.repos.d/*.repo
+- name: Remove old repo
+  file: path=/etc/yum.repos.d/*.repo state=absent 
+
+- name: Create new repo
+  copy: src=etc/yum.repos.d/cdh.repo dest=/etc/yum.repos.d/cdh.repo owner=root group=root mode=0644
+
+- name: Clean up repo cache
+  shell: yum clean all 
+
+- name: Configure dns server
+  template: src=etc/resolv.conf.j2 dest=/etc/resolv.conf owner=root group=root mode=0644
+
+- name: set hostname
+  hostname: name={{ inventory_hostname }}.{{ domainname }}
+
+- name: create hosts file
+  template: src=etc/hosts.j2 dest=/etc/hosts owner=root group=root mode=0644
+
+- name: Delete kernel.exec-shield to prevent from deploying error
+  sysctl: name=kernel.exec-shield state=absent
+  ignore_errors: True
+
+- name: Delete net.ipv4.conf.eth0.arp_notify to prevent from deploying error
+  sysctl: name=net.ipv4.conf.eth0.arp_notify state=absent
+  ignore_errors: True
+
+#- name: Update login.defs
+#  copy: src=etc/login.defs dest=/etc/login.defs owner=root group=root mode=0644
+
+# Disable NetworkManager
+- name: Disable NetworkManager
+  service: name=NetworkManager state=stopped enabled=false
+  ignore_errors: True
+
+# Disable Firewalld
+- name: Disable Firewalld
+  service: name=firewalld state=stopped enabled=false
+
+# set limits.conf
+- name: set limits
+  copy: src=etc/security/limits.conf dest=/etc/security/limits.conf owner=root group=root mode=0644
+
+# apply sysctl
+- name: Apply sysctl
+  sysctl: name={{ item.name }} value={{ item.value }}
+  with_items:
+    - { name: "net.ipv4.ip_nonlocal_bind",          value: "1" }
+    - { name: "net.ipv6.conf.default.autoconf",     value: "0" }
+    - { name: "net.ipv6.conf.default.accept_ra",    value: "0" }
+    - { name: "net.ipv4.conf.all.arp_ignore",       value: "1" }
+    - { name: "net.ipv4.conf.all.arp_announce",     value: "2" }
+    - { name: "kernel.pid_max",                                      value: "524288" }
+    - { name: "net.ipv4.tcp_retries2",                               value: "3" }
+    - { name: "vm.swappiness",			value: "10" }
+
+- name: disable transparent_hugepage
+  shell: /usr/bin/echo never > /sys/kernel/mm/transparent_hugepage/enabled
+  
+- name: disable transparent_hugepagedisable transparent_hugepage
+  shell: /usr/bin/echo never > /sys/kernel/mm/transparent_hugepage/defrag
+
+- lineinfile:
+    name: /etc/rc.local
+    regexp: '/sys/kernel/mm/transparent_hugepage/enabled'
+    line: 'echo never > /sys/kernel/mm/transparent_hugepage/enabled'
+
+- lineinfile:
+    name: /etc/rc.local
+    regexp: '/sys/kernel/mm/transparent_hugepage/defrag'
+    line: 'echo never > /sys/kernel/mm/transparent_hugepage/defrag'
+
+# Disable SELinux
+- name: Disable SELinux in config
+  selinux: state=disabled
+  register: selinux_conf
+ 
+- name: Disable SELinux by command
+  shell: /usr/sbin/setenforce 0
+  when: selinux_conf|changed
+  ignore_errors: True
+
+# NTP
+- name: Install ntp 
+  yum: name=ntp state=latest
+
+- name: Configure ntp file
+  template: src=etc/ntp.conf.j2 dest=/etc/ntp.conf
+
+- name: enable ntp systemd
+  command: systemctl enable ntpd
+
+- name: Stop the ntp service
+  service: name=ntpd state=stopped enabled=true
+
+- name: Sync time
+  shell: /usr/sbin/ntpdate {{ ntp_server }}
+
+- name: Set the Hardware Clock to the current System Time
+  command: /usr/sbin/clock -w
+
+- name: Start the ntp service
+  service: name=ntpd state=started enabled=true
+
+# Install common packages
+- name: Install some tools
+  yum: name={{ item }} state=latest
+  with_items:
+    - net-tools
+    - vim
+    - kexec-tools
+    - wget
+    - lrzsz
+    - rsync
+    - tcpdump
+    - cronie
+    - nfs-utils
+    - bind-utils
+#    - java-1.8.0-openjdk
+  async: 7200
+  poll: 10
+
+# Fix logrotate not work
+- name: Start the crond service
+  service: name=crond state=started enabled=true
+
+- name: create cloudera-scm group
+  group: name=cloudera-scm gid=211 state=present
+
+- name: create cloudera-scm user
+  user: name=cloudera-scm uid=211 group=cloudera-scm home=/var/lib/cloudera-scm-server state=present shell=/sbin/nologin

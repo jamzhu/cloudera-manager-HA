@@ -1,0 +1,25 @@
+---
+
+- name: create cms db
+  mysql_db: 
+    name: "{{ item.value.dbname }}"
+    login_host: "{{ mysql_vip }}"
+    login_user: root
+    login_password: "{{ db_root_password }}"
+    state: present
+  with_dict: "{{ mysqldb }}"
+  run_once: true
+
+- name: create cms db user
+  mysql_user:
+    name: "{{ item.value.dbuser }}"
+    password: "{{ item.value.dbpassword }}"
+    host: "{{ item.value.host }}"
+    priv: "{{ item.value.dbname }}.*:ALL"
+    state: present
+#    update_password: on_create
+    login_host: "{{ mysql_vip }}"
+    login_user: root
+    login_password: "{{ db_root_password }}"
+  with_dict: "{{ mysqldb }}"
+  run_once: true

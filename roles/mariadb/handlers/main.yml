@@ -1,0 +1,6 @@
+---
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: restart mariadb
+  service: name=mariadb state=restarted

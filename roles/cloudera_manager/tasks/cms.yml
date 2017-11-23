@@ -1,0 +1,48 @@
+---
+# This role will install cloudera manager package
+
+- name: Install cloiudera manager package
+  yum: name={{ item }} state=latest
+  with_items:
+    - java-1.8.0-openjdk
+    - cloudera-manager-daemons
+    - cloudera-manager-server
+#    - cloudera-manager-agent
+    - mysql-connector-java
+  async: 7200
+  poll: 10
+#  notify: restart CM
+
+- name: Make sure no other jdk package
+  yum: name={{ item }} state=absent
+  with_items:
+   - jdk
+
+- name: make sure /var/lib/cloudera-scm-server owner=cloudera-scm
+  file: name=/var/lib/cloudera-scm-server state=directory owner=cloudera-scm group=cloudera-scm mode=775
+
+- name: run scm_prepare_database.sh
+  shell: /usr/share/cmf/schema/scm_prepare_database.sh -h {{ mysql_vip }} mysql {{ item.value.dbname }} {{ item.value.dbuser }} {{ item.value.dbpassword }}
+  environment:
+    - JAVA_HOME: "{{ java_home }}"
+  when: item.key  == 'scmdb' and inventory_hostname == groups['cmscluster'][0]
+  with_dict: "{{ mysqldb }}"
+#  run_once: true
+#  when: inventory_hostname == groups['cmscluster'][0]
+
+- name: Create /etc/cloudera-scm-server/db.properties.j2
+  template: src=etc/cloudera-scm-server/db.properties.j2 dest=/etc/cloudera-scm-server/db.properties owner=cloudera-scm group=cloudera-scm mode=0644
+  when: item.key  == 'scmdb' and inventory_hostname != groups['cmscluster'][0]
+  with_dict: "{{ mysqldb }}"
+
+- name: Disable Cloudera Manager Server except node1
+  service: name=cloudera-scm-server state=stopped enabled=no
+  when: inventory_hostname != groups['cmscluster'][0]
+
+- name: Start Cloudera Manager Server on node1
+  service: name=cloudera-scm-server state=started enabled=true
+  when: inventory_hostname == groups['cmscluster'][0]
+
+- name: wait 300 seconds for port 7182 to become open on the host
+  local_action: wait_for host={{ inventory_hostname }} port=7182 delay=10 timeout=300 state=started
+  when: inventory_hostname == groups['cmscluster'][0]

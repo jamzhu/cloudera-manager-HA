@@ -1,0 +1,13 @@
+---
+# This role will install cloudera manager package and configure CMS
+- name: create cloudera-scm group
+  group: name=cloudera-scm gid=211 state=present
+
+- name: create cloudera-scm user
+  user: name=cloudera-scm uid=211 group=cloudera-scm state=present shell=/sbin/nologin
+
+- include: nfs.yml
+  when: cms_ha == True and inventory_hostname in groups['cmscluster']
+
+- include: cms.yml
+  when: inventory_hostname in groups['cmscluster']

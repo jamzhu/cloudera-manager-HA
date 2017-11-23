@@ -1,0 +1,206 @@
+global
+  daemon
+  group  haproxy
+  log  /dev/log local0
+  maxconn  20480
+  pidfile  /var/run/haproxy.pid
+  ssl-default-bind-ciphers  !SSLv2:kEECDH:kRSA:kEDH:kPSK:+3DES:!aNULL:!eNULL:!MD5:!EXP:!RC4:!SEED:!IDEA:!DES
+#  ssl-default-bind-option no-sslv3
+  user  haproxy
+
+defaults
+  log  global
+  maxconn  4096
+  mode  tcp
+  retries  3
+  timeout  http-request 10s
+  timeout  queue 1m
+  timeout  connect 10s
+  timeout  client 1m
+  timeout  server 1m
+  timeout  check 10s
+
+listen haproxy.stats
+    bind {{ mgmt_ip }}:1993 transparent
+    mode http
+    stats enable
+    stats uri /
+    stats auth admin:typassword
+
+listen mysql
+    bind {{ mysql_vip }}:3306 transparent
+    timeout client 90m
+    timeout server 90m
+    option mysql-check user haproxy post-41
+{% for host in groups['basecluster'] %}
+    server mysql{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:3306 backup check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmf
+    bind {{ cms_vip }}:7180 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['cmscluster'] %}
+    server cmshttp{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:7180 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmfavro
+    bind {{ cms_vip }}:7182 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['cmscluster'] %}
+    server cmsavro{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:7182 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+#ssl pass-through, without termination
+listen cmfhttps
+    bind {{ cms_vip }}:7183 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['cmscluster'] %}
+    server cmshttps{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:7183 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt1
+    bind {{ mgmt_vip }}:5678 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt1{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:5678 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt2
+    bind {{ mgmt_vip }}:7184 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt2{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:7184 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt3
+    bind {{ mgmt_vip }}:7185 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt3{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:7185 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt4
+    bind {{ mgmt_vip }}:7186 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt4{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:7186 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt5
+    bind {{ mgmt_vip }}:7187 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt5{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:7187 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt6
+    bind {{ mgmt_vip }}:8083 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt6{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:8083 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt7
+    bind {{ mgmt_vip }}:8084 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt7{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:8084 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt8
+    bind {{ mgmt_vip }}:8086 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt8{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:8086 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt9
+    bind {{ mgmt_vip }}:8087 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt9{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:8087 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt10
+    bind {{ mgmt_vip }}:8091 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt10{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:8091 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen mgmt-agent
+    bind {{ mgmt_vip }}:9000 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server mgmt-agent{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:9000 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt11
+    bind {{ mgmt_vip }}:9994 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt11{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:9994 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt12
+    bind {{ mgmt_vip }}:9995 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt12{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:9995 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt13
+    bind {{ mgmt_vip }}:9996 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt13{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:9996 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt14
+    bind {{ mgmt_vip }}:9997 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt14{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:9997 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt15
+    bind {{ mgmt_vip }}:9998 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt15{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:9998 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt16
+    bind {{ mgmt_vip }}:9999 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt16{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:9999 check fall 5 inter 2000 rise 2
+{% endfor %}
+
+listen cmsmgmt17
+    bind {{ mgmt_vip }}:10101 transparent
+    mode tcp
+    option tcplog
+{% for host in groups['mgmtcluster'] %}
+    server cmsmgmt17{{ loop.index }} {{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }}:10101 check fall 5 inter 2000 rise 2
+{% endfor %}

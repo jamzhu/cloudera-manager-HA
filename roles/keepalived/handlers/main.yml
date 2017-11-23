@@ -1,0 +1,6 @@
+---
+- name: reload keepalived configuration
+  service: name=keepalived  state=reloaded
+
+- name: restart keepalived
+  service: name=keepalived  state=restarted

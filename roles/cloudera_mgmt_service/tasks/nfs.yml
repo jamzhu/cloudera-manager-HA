@@ -1,0 +1,33 @@
+---
+
+- name: create cloudera management service local dir
+  file: name={{ item.mountpoint }} state=directory owner=cloudera-scm group=cloudera-scm mode=755
+  with_items: "{{ nfs_list }}"
+
+- name: mount cloudera management service NFS to temp dir
+  mount: src={{ cloudera_nfs }} name=/tmp/cms_nfs fstype=nfs opts="auto,noatime,nolock,intr,tcp,actimeo=1800" state=mounted
+  when: inventory_hostname == groups['mgmtcluster'][0]
+
+- name: create cloudera management service NFS remote dir
+  file: name=/tmp/cms_nfs/{{ item.nfsdir }} state=directory owner=root group=root mode=755
+  with_items: "{{ nfs_list }}"
+  when: inventory_hostname == groups['mgmtcluster'][0]
+
+- name: umount cloudera management service NFS temp dir
+  mount: src={{ cloudera_nfs }} name=/tmp/cms_nfs state=unmounted
+
+- name: umount cloudera management service NFS temp dir
+  mount: src={{ cloudera_nfs }} name=/tmp/cms_nfs state=absent
+
+- name: mount cloudera management service NFS
+  mount: src={{ cloudera_nfs }}/{{ item.nfsdir }} name={{ item.mountpoint }} fstype=nfs opts="auto,noatime,nolock,intr,tcp,actimeo=1800" state=mounted
+  with_items: "{{ nfs_list }}"
+
+#- name: clean cloudera management service NFS
+#  shell: rm -rf {{ item.mountpoint }}/* 
+#  with_items: "{{ nfs_list }}"
+#  run_once: true
+
+- name: chown cloudera management service NFS
+  file: name={{ item.mountpoint }} state=directory owner=cloudera-scm group=cloudera-scm mode=775
+  with_items: "{{ nfs_list }}"

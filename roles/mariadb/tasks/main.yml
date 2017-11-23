@@ -1,0 +1,90 @@
+---
+# This role will install MySQL and create db user and give permissions.
+
+- name: create mysql group
+  group: name=mysql gid=210 state=present
+
+- name: create mysql user
+  user: name=mysql uid=210 group=mysql home=/dev/null createhome=no state=present shell=/sbin/nologin
+
+- name: Install mariadb package
+  yum: name={{ item }} state=latest
+  with_items:
+    - MariaDB-server
+    - MariaDB-client
+    - MariaDB-shared
+    - galera
+    - rsync
+    - MySQL-python
+  async: 7200
+  poll: 10
+  notify: restart mariadb
+
+#- name: Create mariadb.service.d dir
+#  file: name=/etc/systemd/system/mariadb.service.d state=directory owner=root group=root mode=755
+
+#- name: Create limits.conf
+#  copy: src=etc/systemd/system/mariadb.service.d/limits.conf dest=/etc/systemd/system/mariadb.service.d/limits.conf owner=root group=root mode=644
+#  notify: reload systemd
+
+#- name: Check bind-address
+#  shell: "cat /etc/my.cnf.d/galera.cnf | grep 'bind-address=0.0.0.0'"
+#  register: result
+#  ignore_errors: True
+
+#- name: Update bind-address
+#  when: result.rc == 0
+#  shell: "sed -i 's/bind-address=0.0.0.0/bind-address={{ mgmt_ip }}/g' /etc/my.cnf.d/galera.cnf"
+#  notify: restart mariadb
+
+- name: config my.cnf
+  copy: src=etc/my.cnf.d/my.cnf dest=/etc/my.cnf.d/my.cnf owner=root group=root mode=644
+  notify: restart mariadb
+
+- name: create mariadb log dir
+  file: name=/var/log/mariadb state=directory owner=mysql group=mysql mode=755
+
+#- name: Copy .my.cnf file with root password credentials
+#  template: src=templates/root/my.cnf  dest=/root/.my.cnf  owner=root  group=root  mode=0640
+
+- name: Start Mysql Service
+  service: name=mariadb state=started enabled=true
+
+- name: Config Mysql Root User
+  mysql_user: name=root password={{ db_root_password }} host={{ item }} priv=*.*:ALL,GRANT state=present
+  with_items:
+    - "{{ management_network }}"
+    - ::1
+    - 127.0.0.
+    - localhost
+  ignore_errors: true
+
+- name: Copy .my.cnf file with root password credentials
+  template: src=templates/root/my.cnf  dest=/root/.my.cnf  owner=root  group=root  mode=0640
+
+- name: Remove root login from others host
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost','127.0.0.1','::1','{{ management_network }}')
+  changed_when: False
+
+- name: Config haproxy user
+  mysql_user: name=haproxy host={{ item }} state=present
+  with_items:
+    - "{{ management_network }}"
+    - localhost
+
+- name: Ensure anonymous users are not in the database
+  mysql_user: name=''  host_all=yes  state=absent
+
+#- meta: flush_handlers
+
+#- name: Create mysql backup dir
+#  file: name=/var/backup state=directory owner=root group=root mode=755
+
+#- name: Backup db data every day at 24:00
+#  cron: name='backup mysql data' user='root' hour='0' minute='0' job='tar czfP /var/backup/mysql_`date +\%Y\%m\%d\%H\%M`.tar.gz /var/lib/mysql &> /dev/null' state=present
+
+#- name: Check db backup files and delete files 3 days ago every day at 01:00
+#  cron: name='clean backup files' user='root' hour='1' minute='0' job='find /var/backup -mtime +3 -name "mysql_*.tar.gz" -exec rm -f {} \; &> /dev/null' state=present
+

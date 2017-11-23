@@ -1,0 +1,8 @@
+---
+- hosts: all
+  roles:
+
+- hosts: basecluster
+  roles:
+  - haproxy
+  - keepalived

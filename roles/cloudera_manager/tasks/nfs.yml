@@ -1,0 +1,10 @@
+---
+- name: create /var/lib/cloudera-scm-server
+  file: name=/var/lib/cloudera-scm-server state=directory owner=cloudera-scm group=cloudera-scm mode=775
+
+- name: mount NFS /var/lib/cloudera-scm-server
+  mount: src={{ cms_nfs }} name=/var/lib/cloudera-scm-server fstype=nfs opts="auto,noatime,nolock,intr,tcp,actimeo=1800" state=mounted
+ 
+- name: clean /var/lib/cloudera-scm-server
+  shell: rm -rf /var/lib/cloudera-scm-server/*
+  run_once: ture

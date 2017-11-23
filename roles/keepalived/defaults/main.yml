@@ -1,0 +1,7 @@
+---
+vrrp_instance_state: "BACKUP"
+vrrp_instance_priority: "155"
+enable_keepalived_email_alert: False
+vrrp_virtual_router_id: 101
+vrrp_advert_int: 1
+vrrp_auth_password: passord

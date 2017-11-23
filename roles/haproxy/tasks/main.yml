@@ -1,0 +1,25 @@
+---
+# This role will install and config haproxy
+
+- name: create haproxy group
+  group: name=haproxy gid=209 state=present
+
+- name: create haproxy user
+  user: name=haproxy uid=209 group=haproxy state=present home=/etc/haproxy createhome=no shell=/sbin/nologin
+
+- name: Install haproxy
+  yum: name=haproxy state=latest
+  notify: restart haproxy
+
+#- name: Copy cert
+#  copy: src={{ cert_file }}  dest=/etc/ssl/cert
+#  notify: restart haproxy
+
+- name: Configure haproxy.cfg
+  template: src=etc/haproxy/haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg group=haproxy owner=haproxy mode=0644
+  notify: restart haproxy
+
+- name: Start haproxy
+  service: name=haproxy  state=started  enabled=yes 
+
+- meta: flush_handlers

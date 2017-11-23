@@ -1,0 +1,21 @@
+---
+# setup mariadb galera cluster 10.1.x
+
+- name: Stop mariadb service on node2 and node3
+  service: name=mariadb state=stopped enabled=true
+  when: inventory_hostname != groups['basecluster'][0]
+
+- name: Stop mariadb service on node1 
+  service: name=mariadb state=stopped enabled=true
+  when: inventory_hostname == groups['basecluster'][0]
+
+- name: Create mariadb galera configuration file
+  template: src=etc/my.cnf.d/wsrep.cnf.j2 dest=/etc/my.cnf.d/wsrep.cnf owner=root group=root mode=644
+
+- name: Start mariadb cluster on node1
+  shell: /usr/bin/galera_new_cluster
+  when: inventory_hostname == groups['basecluster'][0]
+
+- name: Start mariadb service on other nodes
+  service: name=mariadb state=started enabled=true
+  when: inventory_hostname != groups['basecluster'][0]

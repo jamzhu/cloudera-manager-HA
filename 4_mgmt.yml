@@ -1,0 +1,4 @@
+---
+- hosts: mgmtcluster
+  roles:
+  - cloudera_mgmt_service

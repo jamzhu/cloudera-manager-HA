@@ -1,0 +1,18 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+{% if inventory_hostname in groups['mgmtcluster'] %}
+{{ hostvars[inventory_hostname]['ansible_' + mgmt_interface]['ipv4']['address'] }} {{ ansible_fqdn }} {{ inventory_hostname }} {{ mgmt_vip_hostname }}
+{% endif %}
+
+{% for host in groups['cdh5-all'] %}
+{% if host not in groups['mgmtcluster'] or host != inventory_hostname %}
+{{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }} {{ host }}.{{ domainname }} {{ host }}
+{% endif %}
+{% endfor %}
+
+{{ mysql_vip }} {{ mysql_vip_hostname }}
+{{ cms_vip }} {{ cms_vip_hostname }}
+{% if inventory_hostname not in groups['mgmtcluster'] %}
+{{ mgmt_vip }} {{ mgmt_vip_hostname }}
+{% endif %}

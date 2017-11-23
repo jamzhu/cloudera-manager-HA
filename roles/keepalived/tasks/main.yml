@@ -1,0 +1,37 @@
+---
+# This role will install and config keepalived
+
+- name: Install bind utils
+  yum: name=bind-utils state=latest
+
+- name: Install keepalived
+  yum: name=keepalived state=latest
+  notify: restart keepalived
+
+- set_fact: 
+    keepalived_vip_mysql: "{{ mysql_vip }}"
+
+- set_fact:
+    keepalived_vip_cms: "{{ cms_vip }}"
+
+- set_fact:
+    keepalived_vip_mgmt: "{{ mgmt_vip }}"
+
+#- set_fact:
+#    vrrp_instance_state: "BACKUP"
+#    vrrp_instance_priority: "155"
+
+- fail: msg="mysql vip is not defined"
+  when: mysql_vip is undefined or "{{ mysql_vip }}" == ""
+      
+- name: Configure keepalived
+  template: src=etc/keepalived/keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf owner=root group=root mode=0640
+  notify: reload keepalived configuration
+
+- name: Create check_haproxy.sh file
+  copy: src=etc/keepalived/check_haproxy.sh dest=/etc/keepalived/check_haproxy.sh owner=root group=root mode=755
+
+- name: Start keepalived
+  service: name=keepalived  state=started  enabled=yes
+
+#- meta: flush_handlers

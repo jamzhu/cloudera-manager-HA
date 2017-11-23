@@ -1,0 +1,26 @@
+---
+- hosts: all
+  roles:
+  - common
+
+- hosts: basecluster
+  roles:
+  - mariadb
+
+- hosts: basecluster
+  roles:
+  - mariadb_cluster
+
+- hosts: basecluster
+  roles:
+  - haproxy
+  - keepalived
+  - cloudera_db_prepare
+
+- hosts: cmscluster
+  roles:
+  - cloudera_manager
+
+- hosts: mgmtcluster
+  roles:
+  - cloudera_mgmt_service

@@ -1,0 +1,9 @@
+# For information describing how to configure the Cloudera Manager Server
+# to connect to databases, see the "Cloudera Manager Installation Guide."
+#
+com.cloudera.cmf.db.type=mysql
+com.cloudera.cmf.db.host={{ mysql_vip }}
+com.cloudera.cmf.db.name={{ item.value.dbname }}
+com.cloudera.cmf.db.user={{ item.value.dbuser }}
+com.cloudera.cmf.db.setupType=EXTERNAL
+com.cloudera.cmf.db.password={{ item.value.dbpassword }}

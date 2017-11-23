@@ -1,0 +1,9 @@
+127.0.0.1 localhost localhost.localdomain
+
+{% for host in groups['cdh5-all'] %}
+{{ hostvars[host]['ansible_' + mgmt_interface]['ipv4']['address'] }} {{ host }}.{{ domainname }} {{ host }}
+{% endfor %}
+
+{{ mysql_vip }} {{ mysql_vip_hostname }}
+{{ cms_vip }} {{ cms_vip_hostname }}
+{{ mgmt_vip }} {{ mgmt_vip_hostname }}
