@@ -1,0 +1,86 @@
+c01d101 ansible_ssh_host=10.225.17.101 ansible_connection=ssh ansible_ssh_user=ocp
+c01d102 ansible_ssh_host=10.225.17.102 ansible_connection=ssh ansible_ssh_user=ocp
+c01d103 ansible_ssh_host=10.225.17.103 ansible_connection=ssh ansible_ssh_user=ocp
+c01d104 ansible_ssh_host=10.225.17.104 ansible_connection=ssh ansible_ssh_user=ocp
+c01d105 ansible_ssh_host=10.225.17.105 ansible_connection=ssh ansible_ssh_user=ocp
+c01d106 ansible_ssh_host=10.225.17.106 ansible_connection=ssh ansible_ssh_user=ocp
+c01d107 ansible_ssh_host=10.225.17.107 ansible_connection=ssh ansible_ssh_user=ocp
+c01d108 ansible_ssh_host=10.225.17.108 ansible_connection=ssh ansible_ssh_user=ocp
+c01d109 ansible_ssh_host=10.225.17.109 ansible_connection=ssh ansible_ssh_user=ocp
+c01d110 ansible_ssh_host=10.225.17.110 ansible_connection=ssh ansible_ssh_user=ocp
+
+[all:vars]
+mgmt_interface = eth0
+mgmt_ip = {{ hostvars[inventory_hostname]['ansible_' + mgmt_interface]['ipv4']['address'] }}
+
+pool_name=lab001
+
+# Domain Name
+domainname=qa.company.com
+
+# DNS Name
+dnsname1=10.225.3.90
+dnsname2=10.224.30.4
+
+# NTP
+ntp_server=10.225.12.1
+
+# Alert Email Notification
+notification_smtp_server = smtp.company.com
+notification_email = who@company.com
+notification_email_from = cdh_{{ poo_name }}@company.com
+
+# Keepalived
+enable_keepalived_email_alert = True
+vrrp_virtual_router_id = 128
+vrrp_advert_int = 1
+vrrp_auth_password = typassword
+
+# Mysql
+db_root_password        = typassword
+mysql_vip_hostname	= mysql_vip.qa.company.com
+mysql_vip               = 10.225.17.111
+mysql_vip_port          = 3306
+management_network      = %.%.%.%
+db_app_password		= typassword
+
+# cms
+cms_ha			= True
+cms_vip_hostname	= cms_vip.qa.company.com
+cms_vip			= 10.225.17.112
+cms_nfs			= 10.224.238.228:/vol/cdh_scm_server
+
+mgmt_vip_hostname	= mgmt_vip.qa.company.com
+mgmt_vip		= 10.225.17.113
+cloudera_nfs		= 10.224.238.228:/vol/cdh_nfs
+java_home		= /usr/lib/jvm/jre-openjdk
+
+[basecluster]
+c01d101 vrrp_instance_state=MASTER vrrp_instance_priority=180
+c01d102 vrrp_instance_state=BACKUP vrrp_instance_priority=150
+
+[cmscluster]
+c01d103
+c01d104
+
+[mgmtcluster]
+c01d105
+c01d106
+
+[ooziecluster]
+c01d107
+c01d108
+
+[hdfs]
+c01d107
+c01d108
+c01d109
+c01d110
+
+[cdh5-all:children]
+cmscluster
+mgmtcluster
+hdfs
+
+[cdh-client:children]
+hdfs
